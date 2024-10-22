@@ -1,4 +1,4 @@
-import { MediaRenderer, useAddress, useClaimConditions, useContract } from "@thirdweb-dev/react";
+import { MediaRenderer, useAddress, useClaimConditions, useContract, useClaimIneligibilityReasons } from "@thirdweb-dev/react";
 import { NFT, toEther } from "@thirdweb-dev/sdk";
 import { MINERS_CONTRACT_ADDRESS, MSTAKING_CONTRACT_ADDRESS } from "../../constants/contracts";
 import styles from "../../styles/Home.module.css";
@@ -19,6 +19,20 @@ export default function NFTCard({ nft }: Props) {
     // Get the businesses contract instance
     // Get the claim conditions for the NFT for cost data
     const { contract: businessesContract } = useContract(MINERS_CONTRACT_ADDRESS, "edition-drop");
+
+    const { contract } = useContract(MINERS_CONTRACT_ADDRESS);
+
+
+    const { data, isLoading, error } = useClaimIneligibilityReasons(
+        contract,
+        {
+          walletAddress: "0x123..",
+          quantity: 10,
+        },
+        nft.metadata.id
+      );
+
+
     const { data: claimCondition } = useClaimConditions(businessesContract, nft.metadata.id);
 
     // Get the staking contract instance
@@ -47,7 +61,7 @@ export default function NFTCard({ nft }: Props) {
 
         setClaimState("nftClaim");
         try {
-            await businessesContract?.erc1155.claim(nft.metadata.id, 2);
+            await businessesContract?.erc1155.claim(nft.metadata.id, 1);
             console.log("NFT claimed");
 
             setClaimState("staking");
@@ -110,10 +124,13 @@ export default function NFTCard({ nft }: Props) {
                 className={styles.cancelbutton}
                 onClick={handleClaim}
                 disabled={claimState !== "init"}
+                
             >{
             claimState === "nftClaim" ? "Preparing" : claimState === "staking" ? "Activation": "Buy"
            
            }
+           
+           
              
             
             </button></div></>
